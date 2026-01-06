@@ -64,7 +64,7 @@ function AttendanceReport() {
         <img src={Logo} alt="Institute Logo" className="header-logo" />
         <nav className="header-nav">
           <Link to="/" className="nav-link">Dashboard</Link>
-          <Link to="/attendance" className="nav-link">Attendance List</Link>
+          <Link to="/attendance" className="nav-link">Attendance Report</Link>
         </nav>
       </header>
 
@@ -181,5 +181,6 @@ function AttendanceReport() {
 }
 
 export default AttendanceReport
+
 
 
