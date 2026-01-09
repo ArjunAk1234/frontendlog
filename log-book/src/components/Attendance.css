@@ -123,3 +123,31 @@
   border-radius: 18px;
   font-weight: 600;
 }
+/* STATUS COLORS */
+.row.present {
+  background: #ecfeff;
+}
+
+.row.late {
+  background: #e4952c; /* orange */
+}
+
+.row.absent {
+  background: #fee2e2; /* red */
+}
+
+/* LATE COMERS BOX */
+.late-box {
+  background: #D9D9D9;
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 12px;
+}
+
+.late-name {
+  background: #D9D9D9;
+  padding: 6px 8px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  font-size: 14px;
+}
