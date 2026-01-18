@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import logo from '../../logo.png';
 import './Login.css';
 import { useNavigate } from 'react-router-dom';
@@ -6,12 +6,17 @@ import { useAuth } from './AuthContext.jsx'; // Import the hook
 
 const Login = () => {
     const navigate = useNavigate();
-    const { login } = useAuth(); // Get the login function from context
+    const { login } = useAuth();
     
-    // Using 'email' to match your backend schema
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
+
+    // 🔥 NEW: Clear tokens when login page loads
+    useEffect(() => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+    }, []);
 
     async function handleLogin(e) {
         e.preventDefault();
@@ -29,13 +34,9 @@ const Login = () => {
             const data = await response.json();
 
             if (response.ok) {
-                // 1. Update the Global Auth Context
-                // data.token and data.role come from your express res.json({ token, role })
-                login(data.token, data.role);
-
+                login(data.token, data.role); // This now clears old tokens first
                 alert('Login Successful');
 
-                // 2. Redirect based on role
                 if (data.role === 'admin') {
                     navigate('/admin');
                 } else if (data.role === 'faculty') {
@@ -44,7 +45,6 @@ const Login = () => {
                     navigate('/cr');
                 }
             } else {
-                // Show the specific error from backend (e.g., "Wrong password")
                 alert(data.error || 'Login Failed');
             }
         } catch (error) {

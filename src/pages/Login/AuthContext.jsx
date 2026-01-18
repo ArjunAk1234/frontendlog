@@ -21,12 +21,16 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
     }, []);
 
-    // Login function
+    // Login function - FIXED: Clear old tokens first
     const login = (newToken, role) => {
+        // STEP 1: Clear everything first
+        logout();
+        
+        // STEP 2: Set new credentials
         setToken(newToken);
         setUser({ role });
         
-        // Persist to browser storage
+        // STEP 3: Persist to browser storage
         localStorage.setItem('token', newToken);
         localStorage.setItem('role', role);
     };
@@ -37,6 +41,7 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
         localStorage.removeItem('token');
         localStorage.removeItem('role');
+        sessionStorage.clear(); // Clear any session data too
     };
 
     // Helper booleans for easy role checking in UI

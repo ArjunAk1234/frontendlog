@@ -21,7 +21,7 @@ export default function Attendance() {
   const getCurrentDay = () => {
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const today = new Date().getDay();
+    const today = 1;
     return { short: days[today], full: dayNames[today] };
   };
 
@@ -181,15 +181,12 @@ export default function Attendance() {
 
       // Determine which course to send
       const courseToSend = isFreeHour ? selectedSlot.course_code : selectedCourse;
-      console.log(JSON.stringify(
-        {
-          timetable_id: selectedSlot.id,
-          date: today,
-          records: records,
-          selected_course_code: courseToSend,
-          is_free: isFreeHour
-        }
-      ));
+
+      // Find the timetable slot for the selected course (for verification)
+      const verificationSlot = isFreeHour 
+        ? selectedSlot 
+        : timetableSlots.find(slot => slot.course_code === selectedCourse) || selectedSlot;
+
       // Submit attendance
       const response = await fetch(`${API_URL}/api/cr/attendance`, {
         method: 'POST',
@@ -204,10 +201,7 @@ export default function Attendance() {
           selected_course_code: courseToSend,
           is_free: isFreeHour
         })
-        
       });
-      
-      console.log(response);
 
       if (!response.ok) throw new Error('Failed to submit attendance');
 
@@ -222,7 +216,8 @@ export default function Attendance() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          token: facultyCode
+          token: facultyCode,
+          timetable_id: verificationSlot.id // ✅ Send the timetable ID of actual course
         })
       });
 
