@@ -21,7 +21,7 @@ export default function Attendance() {
   const getCurrentDay = () => {
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const today = 1;
+    const today = new Date().getDay();;
     return { short: days[today], full: dayNames[today] };
   };
 
