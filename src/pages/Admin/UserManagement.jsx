@@ -41,6 +41,7 @@ const FacultyDirectory = () => {
   const [profileForm, setProfileForm] = useState({ name: "", email: "", dept: "", auth_key: "" });
   const [bulkData, setBulkData] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const [bulkDeptId, setBulkDeptId] = useState("");
 
   useEffect(() => { fetchData(); }, []);
 
@@ -81,7 +82,6 @@ const FacultyDirectory = () => {
       const formatted = jsonData.map(row => ({
         name: row.name || row.Name || "",
         email: row.email || row.Email || "",
-        dept: row.dept || row.Dept || "",
         auth_key: row.auth_key || row.Auth_Key || row.auth_key || ""
       }));
       
@@ -97,26 +97,20 @@ const FacultyDirectory = () => {
       return;
     }
 
+    if (!bulkDeptId) {
+      alert("Please select a department");
+      return;
+    }
+
     setUploading(true);
     
     try {
-      const profilesWithDeptId = bulkData.map(faculty => {
-        const deptMatch = depts.find(d => 
-          d.dept_code?.toUpperCase() === faculty.dept?.toUpperCase() ||
-          d.dept_name?.toUpperCase() === faculty.dept?.toUpperCase()
-        );
-
-        if (!deptMatch) {
-          throw new Error(`Department '${faculty.dept}' not found for ${faculty.email}`);
-        }
-
-        return {
-          name: faculty.name,
-          email: faculty.email,
-          dept_id: deptMatch.id,
-          auth_key: faculty.auth_key
-        };
-      });
+      const profilesWithDeptId = bulkData.map(faculty => ({
+        name: faculty.name,
+        email: faculty.email,
+        dept_id: parseInt(bulkDeptId),
+        auth_key: faculty.auth_key
+      }));
 
       await api.post("/admin/faculty-bulk-upload", {
         profiles: profilesWithDeptId
@@ -126,6 +120,7 @@ const FacultyDirectory = () => {
       
       setShowBulkUpload(false);
       setBulkData([]);
+      setBulkDeptId("");
       fetchData();
       
     } catch (e) {
@@ -137,9 +132,9 @@ const FacultyDirectory = () => {
 
   const downloadTemplate = () => {
     const template = [
-      { name: "Dr John Doe", email: "john@example.com", dept: "CSE", auth_key: "ABC123" },
-      { name: "Dr Jane Smith", email: "jane@example.com", dept: "ECE", auth_key: "XYZ456" },
-      { name: "Dr Robert Brown", email: "robert@example.com", dept: "MECH", auth_key: "DEF789" }
+      { name: "Dr John Doe", email: "john@example.com", auth_key: "ABC123" },
+      { name: "Dr Jane Smith", email: "jane@example.com", auth_key: "XYZ456" },
+      { name: "Dr Robert Brown", email: "robert@example.com", auth_key: "DEF789" }
     ];
     
     const ws = XLSX.utils.json_to_sheet(template);
@@ -165,6 +160,19 @@ const FacultyDirectory = () => {
         <div style={{...formContainer, border:'2px solid #AD3A3C'}}>
           <h4 style={{margin:'0 0 15px'}}>Upload Faculty Profiles</h4>
           
+          <div style={{marginBottom:'15px'}}>
+            <label style={labelStyle}>Select Department</label>
+            <select 
+              style={{...inputStyle, marginBottom:'15px'}} 
+              value={bulkDeptId} 
+              onChange={e => setBulkDeptId(e.target.value)}
+              required
+            >
+              <option value="">-- Select Department --</option>
+              {depts.map(d => <option key={d.id} value={d.id}>{d.dept_code} - {d.dept_name}</option>)}
+            </select>
+          </div>
+
           <input 
             type="file" 
             accept=".xlsx,.xls" 
@@ -188,7 +196,7 @@ const FacultyDirectory = () => {
             <div style={{flex:1}}><label style={labelStyle}>Name</label><input style={inputStyle} value={profileForm.name} onChange={e=>setProfileForm({...profileForm, name:e.target.value})} required /></div>
             <div style={{flex:1}}><label style={labelStyle}>Email</label><input type="email" style={inputStyle} value={profileForm.email} onChange={e=>setProfileForm({...profileForm, email:e.target.value})} required /></div>
             <div style={{width:'150px'}}><label style={labelStyle}>Dept</label><select style={inputStyle} value={profileForm.dept_id} onChange={e=>setProfileForm({...profileForm, dept_id:e.target.value})} required><option value="">Select</option>{depts.map(d=><option key={d.id} value={d.id}>{d.dept_code}</option>)}</select></div>
-            <div style={{width:'150px'}}><label style={labelStyle}>Auth Key</label><input style={inputStyle} maxLength="6" value={profileForm.auth_key} onChange={e=>setProfileForm({...profileForm, auth_key:e.target.value})} required /></div>
+            <div style={{width:'150px'}}><label style={labelStyle}>Auth Key</label><input style={inputStyle} value={profileForm.auth_key} onChange={e=>setProfileForm({...profileForm, auth_key:e.target.value})} required /></div>
             <button type="submit" style={primaryBtn}>Save</button>
           </form>
         </div>
@@ -275,12 +283,10 @@ const StudentCRSection = () => {
         else setSections([]); 
     }, [selectedBatch]);
   
-    // --- UPDATED FETCH FUNCTION ---
     const fetchStudents = async () => {
       if (!selectedSection) return alert("Select a section");
       setLoading(true);
       try {
-        // NOW SENDING SEMESTER PARAMETER    
         const res = await api.get(`/admin/students-by-filter`, { 
           params: { 
               section_id: selectedSection, 
