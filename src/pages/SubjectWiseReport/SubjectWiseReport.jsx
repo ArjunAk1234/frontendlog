@@ -339,7 +339,6 @@ const stickyCellStyle = {
     backgroundColor: '#f8f9fa', // Slightly different gray for sticky columns
     borderRight: '1px solid #dee2e6',
     fontWeight: '500',
-    zIndex: 5
 };
 
 export default SubjectWiseReport;

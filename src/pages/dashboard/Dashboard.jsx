@@ -845,7 +845,7 @@ export default function MonthlyAttendanceDashboard() {
         
         {/* Buttons Group */}
         <div style={{marginLeft: 'auto', display: 'flex', gap: '10px'}}>
-            <button className="csv-btn" onClick={downloadCSV} disabled={data.length === 0}>
+            <button className="fetch-btn" onClick={downloadCSV} disabled={data.length === 0}>
                 Export CSV
             </button>
             <button className="fetch-btn" onClick={fetchAttendance}>
