@@ -1,5 +1,3 @@
-
-
 import { useState, useEffect } from "react";
 import api from "../utils/api";
 
@@ -8,13 +6,13 @@ const AttendanceShortage = () => {
   const [depts, setDepts] = useState([]);
   const [batches, setBatches] = useState([]);
   const [sections, setSections] = useState([]);
-  const [courses, setCourses] = useState([]); // Filtered list of courses for the selected class
+  const [courses, setCourses] = useState([]);
 
   // --- 2. Selection States ---
   const [selectedDept, setSelectedDept] = useState("");
   const [selectedBatch, setSelectedBatch] = useState("");
   const [selectedSection, setSelectedSection] = useState("");
-  const [semester, setSemester] = useState("1"); // Added Semester
+  const [semester, setSemester] = useState("1");
   const [selectedSubject, setSelectedSubject] = useState("ALL");
   const [threshold, setThreshold] = useState(75);
 
@@ -53,15 +51,13 @@ const AttendanceShortage = () => {
   // --- 6. Fetch Courses relevant to the Class & Semester ---
   useEffect(() => {
     if (selectedSection && semester) {
-        // Fetch timetable to get distinct courses for this class
         api.get(`/common/timetable-by-class?section_id=${selectedSection}&semester=${semester}`)
            .then(res => {
-               // Extract unique courses from the timetable data
                const uniqueCourses = [];
                const map = new Map();
                for (const item of res.data) {
                    if(!map.has(item.course_code)){
-                       map.set(item.course_code, true);    // set any value to Map
+                       map.set(item.course_code, true);
                        uniqueCourses.push({
                            course_code: item.course_code,
                            course_name: item.course_name
@@ -69,7 +65,7 @@ const AttendanceShortage = () => {
                    }
                }
                setCourses(uniqueCourses);
-               setSelectedSubject("ALL"); // Reset selection
+               setSelectedSubject("ALL");
            })
            .catch(err => {
                console.error("Failed to load class courses", err);
@@ -80,17 +76,17 @@ const AttendanceShortage = () => {
     }
   }, [selectedSection, semester]);
 
-
-  // --- 7. Main Fetch Logic ---
+  // --- 7. Main Fetch Logic (Updated to use new endpoint) ---
   const fetchShortageList = async () => {
     if (!selectedSection || !semester) return alert("Please select section and semester");
     
     setLoading(true);
     try {
-      const res = await api.get("/admin/attendance-report", {
+      // ✅ CHANGED: Using dedicated shortage endpoint
+      const res = await api.get("/admin/attendance-shortage", {
         params: {
             section_id: selectedSection,
-            semester: semester, // Passed to backend (make sure backend handles it if needed)
+            semester: semester,
             course_code: selectedSubject,
             threshold: threshold
         }
@@ -124,12 +120,10 @@ const AttendanceShortage = () => {
                 {sections.map(s => <option key={s.id} value={s.id}>{s.section_name}</option>)}
             </select>
 
-            {/* Added Semester */}
             <select style={selectStyle} onChange={e => setSemester(e.target.value)} value={semester}>
               {[1,2,3,4,5,6,7,8].map(n => <option key={n} value={n}>Sem {n}</option>)}
             </select>
 
-            {/* Courses Dropdown (Filtered) */}
             <select style={selectStyle} value={selectedSubject} onChange={(e) => setSelectedSubject(e.target.value)} disabled={courses.length === 0}>
                 <option value="ALL">All Subjects</option>
                 {courses.map((s) => (
@@ -144,6 +138,8 @@ const AttendanceShortage = () => {
                     value={threshold} 
                     onChange={e => setThreshold(e.target.value)} 
                     style={{...selectStyle, border:'none', width:'50px'}}
+                    min="0"
+                    max="100"
                 />
             </div>
         </div>
@@ -162,7 +158,6 @@ const AttendanceShortage = () => {
                     <th style={thStyle}>Subject</th>
                     <th style={thStyle}>Attended / Total</th>
                     <th style={thStyle}>Percentage</th>
-                    <th style={thStyle}>Status</th>
                 </tr>
                 </thead>
 
@@ -173,24 +168,12 @@ const AttendanceShortage = () => {
                         <td style={tdStyle}><strong>{s.full_name}</strong></td>
                         <td style={tdStyle}>{s.subject}</td>
                         <td style={tdStyle}>{s.attended} / {s.total}</td>
-                        <td style={{...tdStyle, fontWeight:'bold', color: parseFloat(s.percentage) < threshold ? '#D8000C' : 'green'}}>
+                        <td style={{...tdStyle, fontWeight:'bold', color: parseFloat(s.percentage) < 75 ? '#D8000C' : 'green'}}>
                             {s.percentage}%
-                        </td>
-                        <td style={tdStyle}>
-                            <span style={{
-                                backgroundColor: '#FFD2D2',
-                                color: '#D8000C',
-                                padding: '4px 8px',
-                                borderRadius: '4px',
-                                fontSize: '11px',
-                                fontWeight: 'bold'
-                            }}>
-                            SHORTAGE
-                            </span>
                         </td>
                     </tr>
                 )) : (
-                    <tr><td colSpan="6" style={{textAlign:'center', padding:'30px', color:'#999'}}>
+                    <tr><td colSpan="5" style={{textAlign:'center', padding:'30px', color:'#999'}}>
                         No students found below {threshold}% attendance.
                     </td></tr>
                 )}

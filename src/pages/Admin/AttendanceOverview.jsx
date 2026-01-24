@@ -56,9 +56,8 @@ const AttendanceOverview = () => {
             semester: semester 
         }
       });
-
+      console.log("Fetched Sessions:", res.data);
       setSessions(res.data);
-
     } catch (err) {
       console.error(err);
       alert("Failed to fetch attendance data");
@@ -111,7 +110,6 @@ const AttendanceOverview = () => {
                 <th style={thStyle}>Present</th>
                 <th style={thStyle}>Absent</th>
                 <th style={thStyle}>Percentage</th>
-                <th style={thStyle}>Verified</th>
               </tr>
             </thead>
 
@@ -119,7 +117,7 @@ const AttendanceOverview = () => {
               {sessions.length > 0 ? sessions.map((s, index) => {
                 // Calculate percentage
                 const percentage = s.total_count > 0 
-                    ? ((s.present_count / s.total_count) * 100).toFixed(1) + "%" 
+                    ? (((s.present_count + s.late_count) / s.total_count) * 100).toFixed(1) + "%" 
                     : "-";
                 
                 // Determine display course name (Handle Swap)
@@ -153,22 +151,12 @@ const AttendanceOverview = () => {
                     </td>
 
                     <td style={{...tdStyle, color:'green', fontWeight:'bold'}}>
-                        {s.present_count !== null ? s.present_count : "-"}
+                        {s.present_count !== null ? s.present_count+s.late_count : "-"}
                     </td>
                     <td style={{...tdStyle, color:'red', fontWeight:'bold'}}>
                         {s.absent_count !== null ? s.absent_count : "-"}
                     </td>
                     <td style={tdStyle}>{percentage}</td>
-                    
-                    <td style={tdStyle}>
-                        {s.session_id ? (
-                            s.is_verified_by_faculty ? (
-                                <span style={{color:'green', fontWeight:'bold', fontSize:'12px'}}>✔ Locked</span>
-                            ) : (
-                                <span style={{color:'orange', fontSize:'12px'}}>Pending</span>
-                            )
-                        ) : "-"}
-                    </td>
                   </tr>
                 );
               }) : (
